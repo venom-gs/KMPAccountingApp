@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "990548339973",
+    "project_id": "acc-as",
+    "storage_bucket": "acc-as.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990548339973:android:18c4016428cddf6c6a5b6c",
+        "android_client_info": {
+          "package_name": "com.example.accountingappwithcompose.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "990548339973-seus61gutb4tv7p223hbka1s5d5gn6h3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.accountingappwithcompose.android",
+            "certificate_hash": "646db97c456eed71ec892158979d03c8999bdc32"
+          }
+        },
+        {
+          "client_id": "990548339973-puvs2bnuvsh3bpecsi880ehvdlr8gkoc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwGdEf-7a6gvjyI0dj7Ulabr_KmfRN4hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "990548339973-puvs2bnuvsh3bpecsi880ehvdlr8gkoc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990548339973:android:9b3023fa388d02076a5b6c",
+        "android_client_info": {
+          "package_name": "org.example.kmpaccountingapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "990548339973-puvs2bnuvsh3bpecsi880ehvdlr8gkoc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwGdEf-7a6gvjyI0dj7Ulabr_KmfRN4hk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "990548339973-puvs2bnuvsh3bpecsi880ehvdlr8gkoc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -32,6 +32,7 @@ import io.github.koalaplot.core.xygraph.autoScaleXRange
 import io.github.koalaplot.core.xygraph.autoScaleYRange
 import io.github.koalaplot.core.xygraph.rememberFloatLinearAxisModel
 import io.github.koalaplot.core.xygraph.rememberIntLinearAxisModel
+import org.example.kmpaccountingapp.LoggedInViewContainer.LoggedInViewContainer
 
 
 data class BarData(
@@ -50,7 +51,14 @@ fun App() {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = "loginPage") {
                 composable(route = "loginPage") {
-                    AllScreens({})
+//                    AllScreens({
+//                        navController.navigate("dashBoard")
+//                    })
+                    LoggedInViewContainer()
+//                    LineGraphExample()
+                }
+                composable(route = "dashBoard") {
+                    LoggedInViewContainer()
                 }
             }
 //            val xData = listOf(1,2,3,4,5,6)

@@ -1,5 +1,7 @@
 package org.example.kmpaccountingapp.LoggedInViewContainer.HomeScreenContainer
 
+import LineChartSample
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,6 +55,9 @@ LazyColumn (modifier = Modifier.fillMaxHeight()){
     item {
         TotalAmountContainerCommon("Total Payables")
     }
+    item {
+        LineChartSample()
+    }
 }
 }
 
@@ -76,7 +81,7 @@ fun TotalAmountContainerCommon(header : String){
                         Text("Total Unpaid Invoices")
                     else
                         Text("Total Unpaid Bills")
-                    LineGraph()
+                    ProgressBarChartWithPopups()
                 }
             }
             Box() {
@@ -99,16 +104,6 @@ fun TotalAmountContainerCommon(header : String){
     }
 }
 
-@Composable
-fun LineGraph(){
-
-//    val progressData = listOf(
-//        ProgressData("Completed", 75f, 100f, Color(0xFF4CAF50)),)
-
-    ProgressBarChartWithPopups()
-}
-
-
 
 data class ProgressData(
     val label: String,
@@ -128,76 +123,70 @@ fun ProgressBarWithPopup(
     val progress = (progressData.value / progressData.maxValue).coerceIn(0f, 1f)
 
     Box(modifier = modifier.height(24.dp)) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent()
 
-                            // Check if pressed down
-                            if (event.changes.any { it.pressed }) {
-                                val position = event.changes.first().position
-                                popupPosition = position
+        Box(modifier = modifier) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = { offset ->
+                                popupPosition = offset
                                 showPopup = true
-                            } else {
-                                showPopup = false
                             }
-
-                            // Consume the event
-                            event.changes.forEach { it.consume() }
-                        }
+                        )
                     }
-                }
-        ) {
-            // Background
-            drawRoundRect(
-                color = Color.LightGray.copy(alpha = 0.3f),
-                cornerRadius = CornerRadius(8f, 8f),
-                size = Size(size.width, size.height)
-            )
-
-            // Progress
-            drawRoundRect(
-                color = progressData.color,
-                cornerRadius = CornerRadius(8f, 8f),
-                size = Size(size.width * progress, size.height)
-            )
-        }
-
-        // Show popup when long press is detected
-        if (showPopup) {
-            Popup(
-                alignment = Alignment.TopStart,
-                offset = IntOffset(
-                    popupPosition.x.roundToInt(),
-                    popupPosition.y.roundToInt() - 70 // Position above the touch point
-                )
             ) {
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(8.dp)
+                // Background
+                drawRoundRect(
+                    color = Color.LightGray.copy(alpha = 0.3f),
+                    cornerRadius = CornerRadius(8f, 8f),
+                    size = Size(size.width, size.height)
+                )
+
+                // Progress
+                drawRoundRect(
+                    color = progressData.color,
+                    cornerRadius = CornerRadius(8f, 8f),
+                    size = Size(size.width * progress, size.height)
+                )
+            }
+
+            // Show popup when long press is detected
+            if (showPopup) {
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(
+                        popupPosition.x.roundToInt(),
+                        popupPosition.y.roundToInt() -300 // Position above the touch point
+                    ),
+                    onDismissRequest = { showPopup = false }
                 ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalAlignment = Alignment.Start
+                    Surface(
+                        color = Color.White,
+                        border = BorderStroke(1.dp,Color.Black),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = progressData.label,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Value: ${progressData.value} / ${progressData.maxValue}",
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = progressData.details,
-                            fontSize = 12.sp
-                        )
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = progressData.label,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Value: ${progressData.value} / ${progressData.maxValue}",
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = progressData.details,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
@@ -215,30 +204,7 @@ fun ProgressBarChartWithPopups() {
             color = Color(0xFF4CAF50),
             details = "5 tasks completed today"
         )
-//        ,
-//        ProgressData(
-//            label = "In Progress",
-//            value = 45f,
-//            maxValue = 100f,
-//            color = Color(0xFFFFC107),
-//            details = "3 tasks currently in progress"
-//        ),
-//        ProgressData(
-//            label = "Not Started",
-//            value = 25f,
-//            maxValue = 100f,
-//            color = Color(0xFFF44336),
-//            details = "8 tasks waiting to be started"
-//        )
     )
-
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(16.dp),
-//        shape = RoundedCornerShape(8.dp)
-//    ) {
-            // Progress bars with popups
             progressDataList.forEach { progressData ->
                 ProgressBarWithPopup(
                     progressData = progressData,
@@ -248,6 +214,5 @@ fun ProgressBarChartWithPopups() {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
-//    }
 }
 

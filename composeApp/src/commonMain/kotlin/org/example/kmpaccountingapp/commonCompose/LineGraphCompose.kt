@@ -1,220 +1,449 @@
-package org.example.kmpaccountingapp.commonCompose
-
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.input.key.Key.Companion.K
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.*
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import kotlin.math.abs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.max
 import kotlin.math.roundToInt
 
-
+/**
+ * Data model for line chart
+ */
 data class DataPoint(
-    val x: Float,
-    val y: Float,
-    val label: String,
-    val value: Float
+    val value: Float,
+    val label: String
 )
 
-
-// Example usage
+/**
+ * A beautiful and animated line chart with tooltips, grid lines, and proper axis labeling
+ */
 @Composable
-fun LineGraphExample() {
-    val monthlyData = listOf(
-        DataPoint(1f, 20f, "Jan", 20f),
-        DataPoint(2f, 35f, "Feb", 35f),
-        DataPoint(3f, 25f, "Mar", 25f),
-        DataPoint(4f, 40f, "Apr", 40f),
-        DataPoint(5f, 35f, "May", 35f),
-        DataPoint(6f, 60f, "Jun", 60f),
-        DataPoint(7f, 45f, "Jul", 45f),
-        DataPoint(8f, 50f, "Aug", 50f)
-    )
-
-    LineGraphWithPopup(
-        title = "Monthly Revenue (in $K)",
-        dataPoints = monthlyData,
-        lineColor = Color(0xFF2196F3),
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-@Composable
-fun LineGraphWithPopup(
-    title: String,
+fun AnimatedLineChart(
     dataPoints: List<DataPoint>,
-    lineColor: Color = Color(0xFF4CAF50),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "Line Chart",
+    xAxisTitle: String = "X Axis",
+    yAxisTitle: String = "Y Axis",
+    lineColor: Color = Color(0xFF2196F3),
+    gridColor: Color = Color(0xFFEEEEEE),
+    textColor: Color = Color(0xFF424242),
+    backgroundColor: Color = Color.White,
+    showAreaGradient: Boolean = true,
+    showGridLines: Boolean = true,
+    animationDuration: Int = 1000
 ) {
-    var selectedPoint by remember { mutableStateOf<DataPoint?>(null) }
-    var popupPosition by remember { mutableStateOf(Offset.Zero) }
-    var showPopup by remember { mutableStateOf(false) }
+    if (dataPoints.isEmpty()) return
 
-    Card(
-        modifier = modifier.padding(16.dp),
-        shape = RoundedCornerShape(8.dp)
+    val scope = rememberCoroutineScope()
+
+    // Calculate max Y value with a little padding
+    val maxY = remember(dataPoints) {
+        (dataPoints.maxOf { it.value } * 1.2f).roundToInt().toFloat()
+    }
+
+    // Animation progress
+    var animationProgress by remember { mutableStateOf(0f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = animationProgress,
+        animationSpec = tween(
+            durationMillis = animationDuration,
+            easing = FastOutSlowInEasing
+        ),
+        label = "lineChartAnimation"
+    )
+
+    // Tooltip state
+    var showTooltip by remember { mutableStateOf(false) }
+    var tooltipIndex by remember { mutableStateOf(0) }
+    var tooltipPosition by remember { mutableStateOf(Offset.Zero) }
+
+    // Start the animation when the component is first composed
+    LaunchedEffect(dataPoints) {
+        animationProgress = 0f
+        delay(300) // Small delay for better UX
+        animationProgress = 1f
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
+            .padding(16.dp)
     ) {
-        Column(
+        // Chart title
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = textColor,
             modifier = Modifier
-                .padding(16.dp)
                 .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            textAlign = TextAlign.Center
+        )
+
+        // Y-axis title
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
         ) {
             Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                text = yAxisTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
+                fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.CenterStart),
+                textAlign = TextAlign.Start
             )
+        }
 
-            Box(
+        // Chart area
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(start = 40.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+        ) {
+            // Create Y-axis labels
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
+                    .align(Alignment.CenterStart)
+                    .fillMaxHeight()
+                    .width(40.dp)
+                    .offset(x = (-40).dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                val canvasModifier = Modifier
+                for (i in 5 downTo 0) {
+                    Text(
+                        text = (maxY * i / 5).toInt().toString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textColor,
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            val textMeasurer = rememberTextMeasurer()
+
+            // Main chart canvas
+            Canvas(
+                modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
+                    .pointerInput(dataPoints) {
                         detectTapGestures(
-                            onLongPress = { offset ->
-                                // Find the nearest data point to the long press
-                                val points = dataPoints.mapIndexed { index, point ->
-                                    val pointX = size.width * (point.x / dataPoints.maxOf { it.x })
-                                    val pointY = size.height * (1 - point.y / dataPoints.maxOf { it.y })
-                                    Triple(point, Offset(pointX, pointY), index)
-                                }
-
-                                val nearest = points.minByOrNull { abs(it.second.x - offset.x) + abs(it.second.y - offset.y) }
-                                nearest?.let {
-                                    selectedPoint = it.first
-                                    popupPosition = it.second
-                                    showPopup = true
-                                }
+                            onPress = { offset ->
+                                // Find closest point
+                                val canvasWidth = size.width
+                                val pointWidth = canvasWidth / (dataPoints.size - 1)
+                                val index = (offset.x / pointWidth).toInt().coerceIn(0, dataPoints.size - 1)
+                                tooltipIndex = index
+                                tooltipPosition = Offset(
+                                    x = (index * pointWidth).toFloat(),
+                                    y = size.height * (1f - dataPoints[index].value / maxY)
+                                )
+                                showTooltip = true
                             },
-                            onTap = {
-                                showPopup = false
-                            }
+                            onTap = { showTooltip = !showTooltip }
                         )
                     }
+            ) {
+                val width = size.width
+                val height = size.height
+                val pointWidth = width / (dataPoints.size - 1)
 
-                Canvas(modifier = canvasModifier) {
-                    val maxX = dataPoints.maxOf { it.x }
-                    val maxY = dataPoints.maxOf { it.y }
-
-                    // Draw axes
-                    drawLine(
-                        color = Color.Gray,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = 2f
-                    )
-                    drawLine(
-                        color = Color.Gray,
-                        start = Offset(0f, 0f),
-                        end = Offset(0f, size.height),
-                        strokeWidth = 2f
-                    )
-
-                    // Draw grid lines (horizontal)
-                    for (i in 0..4) {
-                        val y = size.height * (1 - i / 4f)
+                // Draw grid lines
+                if (showGridLines) {
+                    // Horizontal grid lines
+                    for (i in 0..5) {
+                        val y = height * (1 - i / 5f)
                         drawLine(
-                            color = Color.LightGray,
+                            color = gridColor,
                             start = Offset(0f, y),
-                            end = Offset(size.width, y),
-                            strokeWidth = 1f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+                            end = Offset(width, y),
+                            strokeWidth = 1.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
                         )
                     }
 
-                    // Draw data points and connect them with lines
-                    for (i in 0 until dataPoints.size - 1) {
-                        val startX = size.width * (dataPoints[i].x / maxX)
-                        val startY = size.height * (1 - dataPoints[i].y / maxY)
-                        val endX = size.width * (dataPoints[i + 1].x / maxX)
-                        val endY = size.height * (1 - dataPoints[i + 1].y / maxY)
-
-                        // Draw line between points
-                        drawLine(
-                            color = lineColor,
-                            start = Offset(startX, startY),
-                            end = Offset(endX, endY),
-                            strokeWidth = 3f
-                        )
-
-                        // Draw point
-                        drawCircle(
-                            color = lineColor,
-                            radius = 6f,
-                            center = Offset(startX, startY)
-                        )
-
-                        // Draw the last point
-                        if (i == dataPoints.size - 2) {
-                            drawCircle(
-                                color = lineColor,
-                                radius = 6f,
-                                center = Offset(endX, endY)
+                    // Vertical grid lines
+                    for (i in dataPoints.indices) {
+                        if (i % max(1, dataPoints.size / 6) == 0) {
+                            val x = i * pointWidth
+                            drawLine(
+                                color = gridColor,
+                                start = Offset(x, 0f),
+                                end = Offset(x, height),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
                             )
                         }
                     }
                 }
 
-                // Show popup when a point is selected
-                if (showPopup && selectedPoint != null) {
-                    Popup(
-                        alignment = Alignment.TopStart,
-                        offset = IntOffset(
-                            popupPosition.x.roundToInt(),
-                            popupPosition.y.roundToInt() - 100 // Offset above the point
-                        )
-                    ) {
-                        Surface(
-                            color = Color.White,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(8.dp)
-                            ) {
-                                Text(
-                                    text = selectedPoint!!.label,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Value: ${selectedPoint!!.value}",
-                                    fontSize = 12.sp
-                                )
+                // Create path for line
+                val linePath = Path().apply {
+                    dataPoints.forEachIndexed { index, dataPoint ->
+                        val progress = (index.toFloat() / (dataPoints.size - 1).coerceAtLeast(1))
+                        if (progress <= animatedProgress) {
+                            val currentAnimProgress = if (index < dataPoints.size - 1) 1f else
+                                (animatedProgress - progress) / (1f / (dataPoints.size - 1).coerceAtLeast(1))
+
+                            val x = index * pointWidth
+                            val normalizedY = dataPoint.value / maxY
+                            val y = height * (1 - normalizedY * currentAnimProgress.coerceIn(0f, 1f))
+
+                            if (index == 0) {
+                                moveTo(x, y)
+                            } else {
+                                lineTo(x, y)
                             }
                         }
                     }
                 }
+
+                // Create path for the area under the line
+                if (showAreaGradient) {
+                    val areaPath = Path().apply {
+                        // Start at the bottom-left corner
+                        moveTo(0f, height)
+
+                        // Add all the line points
+                        dataPoints.forEachIndexed { index, dataPoint ->
+                            val progress = (index.toFloat() / (dataPoints.size - 1).coerceAtLeast(1))
+                            if (progress <= animatedProgress) {
+                                val currentAnimProgress = if (index < dataPoints.size - 1) 1f else
+                                    (animatedProgress - progress) / (1f / (dataPoints.size - 1).coerceAtLeast(1))
+
+                                val x = index * pointWidth
+                                val normalizedY = dataPoint.value / maxY
+                                val y = height * (1 - normalizedY * currentAnimProgress.coerceIn(0f, 1f))
+
+                                lineTo(x, y)
+                            }
+                        }
+
+                        // Close the path by drawing lines to the bottom-right and bottom-left corners
+                        val lastVisiblePointIndex = (dataPoints.size * animatedProgress).toInt().coerceAtMost(dataPoints.size - 1)
+                        lineTo(lastVisiblePointIndex * pointWidth, height)
+                        lineTo(0f, height)
+                        close()
+                    }
+
+                    // Draw area with gradient
+                    drawPath(
+                        path = areaPath,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                lineColor.copy(alpha = 0.4f),
+                                lineColor.copy(alpha = 0.1f),
+                                lineColor.copy(alpha = 0.05f)
+                            ),
+                            startY = 0f,
+                            endY = height
+                        )
+                    )
+                }
+
+                // Draw line
+                drawPath(
+                    path = linePath,
+                    color = lineColor,
+                    style = Stroke(
+                        width = 3.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
+                )
+
+                // Draw data points with animation
+                dataPoints.forEachIndexed { index, dataPoint ->
+                    val progress = (index.toFloat() / (dataPoints.size - 1).coerceAtLeast(1))
+                    if (progress <= animatedProgress) {
+                        val currentAnimProgress = if (index < dataPoints.size - 1) 1f else
+                            (animatedProgress - progress) / (1f / (dataPoints.size - 1).coerceAtLeast(1))
+
+                        val x = index * pointWidth
+                        val normalizedY = dataPoint.value / maxY
+                        val y = height * (1 - normalizedY * currentAnimProgress.coerceIn(0f, 1f))
+
+                        // Draw point
+                        drawCircle(
+                            color = lineColor,
+                            radius = 4.dp.toPx(),
+                            center = Offset(x, y)
+                        )
+
+                        // Draw white inner circle
+                        drawCircle(
+                            color = Color.White,
+                            radius = 2.dp.toPx(),
+                            center = Offset(x, y)
+                        )
+                    }
+                }
+
+                // Draw tooltip if needed
+                if (showTooltip && tooltipIndex in dataPoints.indices) {
+                    val dataPoint = dataPoints[tooltipIndex]
+                    val x = tooltipIndex * pointWidth
+                    val normalizedY = dataPoint.value / maxY
+                    val y = height * (1 - normalizedY)
+
+                    // Draw vertical indicator line
+                    drawLine(
+                        color = lineColor.copy(alpha = 0.5f),
+                        start = Offset(x, 0f),
+                        end = Offset(x, height),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
+                    )
+
+                    // Draw tooltip background
+                    val tooltipWidth = 80.dp.toPx()
+                    val tooltipHeight = 40.dp.toPx()
+                    val tooltipX = (x - tooltipWidth / 2).coerceIn(0f, width - tooltipWidth)
+                    val tooltipY = (y - tooltipHeight - 10.dp.toPx()).coerceIn(0f, height - tooltipHeight)
+
+                    drawRoundRect(
+                        color = Color(0xDD000000),
+                        topLeft = Offset(tooltipX, tooltipY),
+                        size = Size(tooltipWidth, tooltipHeight),
+                        cornerRadius = CornerRadius(4.dp.toPx())
+                    )
+
+                    // Draw tooltip text using the proper TextMeasurer approach
+
+                    val labelLayout = textMeasurer.measure(
+                        text = AnnotatedString(dataPoint.label),
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+
+                    val valueLayout = textMeasurer.measure(
+                        text = AnnotatedString(dataPoint.value.toString()),
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+
+                    drawText(
+                        labelLayout,
+                        topLeft = Offset(
+                            x = tooltipX + (tooltipWidth - labelLayout.size.width) / 2,
+                            y = tooltipY + 8.dp.toPx()
+                        )
+                    )
+
+                    drawText(
+                        valueLayout,
+                        topLeft = Offset(
+                            x = tooltipX + (tooltipWidth - valueLayout.size.width) / 2,
+                            y = tooltipY + 8.dp.toPx() + labelLayout.size.height
+                        )
+                    )
+                }
             }
         }
+
+        // X-axis labels
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 40.dp, end = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Show a subset of labels to avoid overcrowding
+            val step = max(1, dataPoints.size / 6)
+            dataPoints.forEachIndexed { index, dataPoint ->
+                if (index % step == 0 || index == dataPoints.lastIndex) {
+                    Text(
+                        text = dataPoint.label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textColor,
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.width(40.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.width(40.dp))
+                }
+            }
+        }
+
+        // X-axis title
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            Text(
+                text = xAxisTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
+                fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = TextAlign.Center
+            )
+        }
     }
+}
+
+@Composable
+fun LineChartSample() {
+    val data = listOf(
+        DataPoint(18f, "Jan"),
+        DataPoint(24f, "Feb"),
+        DataPoint(15f, "Mar"),
+        DataPoint(32f, "Apr"),
+        DataPoint(27f, "May"),
+        DataPoint(43f, "Jun"),
+        DataPoint(38f, "Jul"),
+        DataPoint(52f, "Aug"),
+        DataPoint(47f, "Sep"),
+        DataPoint(35f, "Oct"),
+        DataPoint(42f, "Nov"),
+        DataPoint(58f, "Dec")
+    )
+
+    AnimatedLineChart(
+        dataPoints = data,
+        title = "Monthly Sales Performance",
+        xAxisTitle = "Month",
+        yAxisTitle = "Sales (K)",
+        lineColor = Color(0xFF00BCD4),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+    )
 }

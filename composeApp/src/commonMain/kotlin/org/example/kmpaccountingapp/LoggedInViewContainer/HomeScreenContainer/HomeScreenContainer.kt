@@ -1,5 +1,6 @@
 package org.example.kmpaccountingapp.LoggedInViewContainer.HomeScreenContainer
 
+import BarChartSample
 import LineChartSample
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -56,7 +57,7 @@ LazyColumn (modifier = Modifier.fillMaxHeight()){
         TotalAmountContainerCommon("Total Payables")
     }
     item {
-        LineChartSample()
+        BarChartSample()
     }
 }
 }

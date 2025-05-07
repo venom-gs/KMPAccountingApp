@@ -14,8 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -37,7 +39,8 @@ data class PieChartData(
 fun InteractivePieChart(
     data: List<PieChartData>,
     modifier: Modifier = Modifier,
-    radius: Float = 350f,        // Controls the radius of the pie chart
+    outerRadius: Float = 120f,    // Controls the outer radius of the donut
+    innerRadiusRatio: Float = 0.6f, // Inner radius as a ratio of outer radius (0-1)
     chartSize: Dp = 350.dp,      // Controls the overall canvas size
     containerHeight: Dp = 400.dp, // Controls the height of the container
     animDuration: Int = 1000
@@ -79,6 +82,9 @@ fun InteractivePieChart(
         )
     }
 
+    // Background color for the center of the donut
+    var backgroundColor = MaterialTheme.colorScheme.background
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -95,8 +101,9 @@ fun InteractivePieChart(
                             (offset.x - center.x).pow(2) + (offset.y - center.y).pow(2)
                         )
 
-                        // Check if the click is within the chart
-                        if (distance <= radius) {
+                        // Check if the click is within the donut (between inner and outer radius)
+                        val innerRadius = outerRadius * innerRadiusRatio
+                        if (distance in innerRadius..outerRadius) {
                             // Calculate angle of touch point (0-360 degrees, 0 at top, clockwise)
                             var touchAngle = (atan2(
                                 offset.y - center.y,
@@ -132,23 +139,73 @@ fun InteractivePieChart(
 
             data.forEachIndexed { index, pieData ->
                 val sweepAngle = (pieData.value / totalSum) * 360f * animatedProgress.value
-                val segmentRadius = radius * animatedScales[index].value
+                val scaleFactor = animatedScales[index].value
+                val segmentOuterRadius = outerRadius * scaleFactor
+                val segmentInnerRadius = (outerRadius * innerRadiusRatio)
 
-                // Draw segment
-                drawArc(
-                    color = pieData.color,
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    useCenter = true,
-                    topLeft = Offset(
-                        center.x - segmentRadius,
-                        center.y - segmentRadius
-                    ),
-                    size = Size(segmentRadius * 2, segmentRadius * 2)
+                // Draw donut segment (we'll need to use a path for this)
+                val path = Path().apply {
+                    // Outer arc
+                    addArc(
+                        Rect(
+                            center.x - segmentOuterRadius,
+                            center.y - segmentOuterRadius,
+                            center.x + segmentOuterRadius,
+                            center.y + segmentOuterRadius
+                        ),
+                        startAngle,
+                        sweepAngle
+                    )
+
+                    // Line to inner arc
+                    val innerStartRadians = (startAngle + sweepAngle) * (PI / 180f).toFloat()
+                    val innerStartX = center.x + segmentInnerRadius * cos(innerStartRadians)
+                    val innerStartY = center.y + segmentInnerRadius * sin(innerStartRadians)
+                    lineTo(innerStartX, innerStartY)
+
+                    // Inner arc (going counter-clockwise)
+                    arcTo(
+                        Rect(
+                            center.x - segmentInnerRadius,
+                            center.y - segmentInnerRadius,
+                            center.x + segmentInnerRadius,
+                            center.y + segmentInnerRadius
+                        ),
+                        startAngle + sweepAngle,
+                        -sweepAngle,
+                        false
+                    )
+
+                    // Close the path
+                    close()
+                }
+
+                // Draw the donut segment
+                drawPath(
+                    path = path,
+                    color = pieData.color
                 )
 
                 startAngle += sweepAngle
             }
+
+            // Draw the inner circle (background) to complete the donut effect
+            drawCircle(
+                color = backgroundColor,
+                radius = outerRadius * innerRadiusRatio * 0.98f,  // Slightly smaller to avoid edge artifacts
+                center = center
+            )
+        }
+
+        // Draw labels in the center
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Total")
+            Text(
+                text = totalSum.toString())
         }
 
         // Show popup for selected segment
@@ -186,7 +243,6 @@ fun InteractivePieChart(
         }
     }
 }
-
 // Helper function to determine if an angle is within a segment
 private fun isAngleInSegment(angle: Float, startAngle: Float, sweepAngle: Float): Boolean {
     // Handle segments that cross the 0/360 boundary
@@ -225,59 +281,52 @@ fun PieChartExample() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Interactive Pie Chart",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 24.dp)
+                textAlign = TextAlign.Center
             )
-
-            // Example of how to customize the pie chart size
             InteractivePieChart(
                 data = pieChartData,
                 modifier = Modifier.fillMaxWidth(),
-                radius = 500f,           // Increase the radius
+                outerRadius = 500f,           // Increase the radius
                 chartSize = 450.dp,      // Increase the canvas size
-                containerHeight = 500.dp // Increase the container height
+                containerHeight = 330.dp // Increase the container height
             )
+//Row(horizontalArrangement= Arrangement.SpaceBetween) {
+//    // Example of how to customize the pie chart size
+//    Box(modifier = Modifier.weight(0.5f)){
+//    }
+//    // Legend
+//    Column(
+//        modifier = Modifier.fillMaxWidth().weight(0.5f),
+//        horizontalAlignment = Alignment.Start
+//    ) {
+//
+//        pieChartData.forEach { data ->
+//            Row(
+//                modifier = Modifier,
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(16.dp)
+//                        .background(data.color)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text(
+//                    text = data.name
+//                )
+//                Text(
+//                    text = "(${((data.value / pieChartData.sumOf { it.value.toDouble() }) * 100).toFloat().round(1)}%)")
+//            }
+//        }
+//    }
+//}
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Legend
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Legend",
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                pieChartData.forEach { data ->
-                    Row(
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .fillMaxWidth(0.7f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .background(data.color)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${data.name} (${data.value})")
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = "${((data.value / pieChartData.sumOf { it.value.toDouble() }) * 100).toFloat().round(1)}%")
-                    }
-                }
-            }
         }
     }
 }

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import org.example.kmpaccountingapp.commonCompose.PieChartExample
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -57,7 +58,7 @@ LazyColumn (modifier = Modifier.fillMaxHeight()){
         TotalAmountContainerCommon("Total Payables")
     }
     item {
-        BarChartSample()
+        PieChartExample()
     }
 }
 }

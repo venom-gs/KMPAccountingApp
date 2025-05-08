@@ -66,13 +66,27 @@ private val LightColorPalette = lightColorScheme(
     primaryContainer = Color(0xFF223D22),
     secondary = Color(0xFFB9FD66),
     tertiary = Color(0xFF3700B3),
-    background = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
-    surface = androidx.compose.ui.graphics.Color(0xc4c4c4),
+    background = androidx.compose.ui.graphics.Color(0xFFFCFFFF),
+    surface = androidx.compose.ui.graphics.Color(0xFF97A5A6),
     onPrimary = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
     onSecondary = androidx.compose.ui.graphics.Color(0xFF000000),
     onBackground = androidx.compose.ui.graphics.Color(0xFF000000),
     onSurface = androidx.compose.ui.graphics.Color(0xFF000000)
 )
+
+//// Define light theme colors
+//private val LightColorPalette = lightColorScheme(
+//    primary = Color(0xFFB9FD66),
+//    primaryContainer = Color(0xFF223D22),
+//    secondary = Color(0xFFB9FD66),
+//    tertiary = Color(0xFF3700B3),
+//    background = androidx.compose.ui.graphics.Color(0xEDFBFC),
+//    surface = androidx.compose.ui.graphics.Color(0xc4c4c4),
+//    onPrimary = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+//    onSecondary = androidx.compose.ui.graphics.Color(0xFF000000),
+//    onBackground = androidx.compose.ui.graphics.Color(0x97A5A6),
+//    onSurface = androidx.compose.ui.graphics.Color(0xFF000000)
+//)
 
 // Define dark theme colors
 private val DarkColorPalette = darkColorScheme(

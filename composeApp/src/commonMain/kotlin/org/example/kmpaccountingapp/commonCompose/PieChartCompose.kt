@@ -41,9 +41,7 @@ fun InteractivePieChart(
     modifier: Modifier = Modifier,
     outerRadius: Float = 120f,    // Controls the outer radius of the donut
     innerRadiusRatio: Float = 0.6f, // Inner radius as a ratio of outer radius (0-1)
-    chartSize: Dp = 350.dp,      // Controls the overall canvas size
-    containerHeight: Dp = 400.dp, // Controls the height of the container
-    animDuration: Int = 1000
+    chartSize: Dp = 350.dp
 ) {
     // Calculate the total sum of all data points
     val totalSum = data.sumOf { it.value.toDouble() }.toFloat()
@@ -87,13 +85,12 @@ fun InteractivePieChart(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(containerHeight),
+            .fillMaxWidth().wrapContentHeight(),
         contentAlignment = Alignment.Center
     ) {
         Canvas(
-            modifier = Modifier
-                .size(chartSize)
+            modifier = Modifier.wrapContentSize()
+                .size(chartSize).background(Color.Red)
                 .pointerInput(data) {
                     detectTapGestures { offset ->
                         val center = Offset((size.width / 2).toFloat(), (size.height / 2).toFloat())
@@ -285,16 +282,11 @@ fun PieChartExample() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Interactive Pie Chart",
-                textAlign = TextAlign.Center
-            )
             InteractivePieChart(
                 data = pieChartData,
                 modifier = Modifier.fillMaxWidth(),
                 outerRadius = 500f,           // Increase the radius
-                chartSize = 450.dp,      // Increase the canvas size
-                containerHeight = 330.dp // Increase the container height
+                chartSize = 450.dp           // Increase the canvas size
             )
 //Row(horizontalArrangement= Arrangement.SpaceBetween) {
 //    // Example of how to customize the pie chart size

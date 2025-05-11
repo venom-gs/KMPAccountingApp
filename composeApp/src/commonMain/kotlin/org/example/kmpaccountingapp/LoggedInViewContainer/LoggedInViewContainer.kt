@@ -1,5 +1,7 @@
 package org.example.kmpaccountingapp.LoggedInViewContainer
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,7 +43,15 @@ fun LoggedInViewContainer(){
 
     Box(modifier = Modifier.fillMaxSize()) {
         val navControllerWholeScreen = rememberNavController()
-        NavHost(navController = navControllerWholeScreen, startDestination = "Home") {
+        NavHost(navController = navControllerWholeScreen, startDestination = "Home",
+            enterTransition = {
+                // you can change whatever you want transition
+                EnterTransition.None
+            },
+            exitTransition = {
+                // you can change whatever you want transition
+                ExitTransition.None
+            })  {
             composable(route = "Home") {
                 AllViewContainer(navControllerWholeScreen)
         }
@@ -80,7 +90,15 @@ fun AllViewContainer(navControllerWholeScreen :NavController){
             }
         }
         Box(modifier = Modifier.weight(0.86f).fillMaxSize()) {
-            NavHost(navController = navController, startDestination = "Home") {
+            NavHost(navController = navController, startDestination = "Home",
+                enterTransition = {
+                    // you can change whatever you want transition
+                    EnterTransition.None
+                },
+                exitTransition = {
+                    // you can change whatever you want transition
+                    ExitTransition.None
+                }) {
                 composable(route = "Home") {
                     HomeScreenContainer()
                 }

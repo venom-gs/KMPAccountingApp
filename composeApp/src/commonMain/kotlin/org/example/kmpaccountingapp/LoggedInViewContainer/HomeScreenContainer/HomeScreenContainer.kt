@@ -1,6 +1,8 @@
 package org.example.kmpaccountingapp.LoggedInViewContainer.HomeScreenContainer
 
 import LineChartSample
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -39,7 +41,15 @@ LazyColumn {
         NavigationButtonContainer(navController)
     }
     item {
-        NavHost(navController = navController, startDestination = "dashboard") {
+        NavHost(navController = navController, startDestination = "dashboard",
+            enterTransition = {
+                // you can change whatever you want transition
+                EnterTransition.None
+            },
+            exitTransition = {
+                // you can change whatever you want transition
+                ExitTransition.None
+            }) {
             composable(route = "dashboard") {
                 HomeDashBoard()
             }

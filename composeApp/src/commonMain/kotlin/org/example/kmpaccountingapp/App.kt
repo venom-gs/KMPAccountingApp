@@ -1,5 +1,7 @@
 package org.example.kmpaccountingapp
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -49,7 +51,15 @@ fun App() {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)){
 
             val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "loginPage") {
+            NavHost(navController = navController, startDestination = "loginPage",
+                enterTransition = {
+                    // you can change whatever you want transition
+                    EnterTransition.None
+                },
+                exitTransition = {
+                    // you can change whatever you want transition
+                    ExitTransition.None
+                }) {
                 composable(route = "loginPage") {
 //                    AllScreens({
 //                        navController.navigate("dashBoard")

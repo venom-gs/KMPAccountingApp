@@ -1,5 +1,7 @@
 package com.example.accountingappwithcompose.android.screens.signIn
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +50,15 @@ import com.example.accountingappwithcompose.android.commonCompose.CommonDivider
 @Composable
 fun AllScreens(successfulLogin: () -> Unit) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "login"){
+    NavHost(navController = navController, startDestination = "login",
+        enterTransition = {
+            // you can change whatever you want transition
+            EnterTransition.None
+        },
+        exitTransition = {
+            // you can change whatever you want transition
+            ExitTransition.None
+        }) {
 
         composable(route = "login") {
             SignInContainer({

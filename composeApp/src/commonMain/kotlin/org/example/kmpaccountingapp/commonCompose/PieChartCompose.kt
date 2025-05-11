@@ -39,7 +39,7 @@ data class PieChartData(
 fun InteractivePieChart(
     data: List<PieChartData>,
     modifier: Modifier = Modifier,
-    outerRadius: Float = 120f,    // Controls the outer radius of the donut
+    outerRadius: Dp = 120.dp,    // Controls the outer radius of the donut (now in Dp)
     innerRadiusRatio: Float = 0.6f, // Inner radius as a ratio of outer radius (0-1)
     chartSize: Dp = 350.dp
 ) {
@@ -59,6 +59,13 @@ fun InteractivePieChart(
         targetValue = 1f,
         label = "pieChartAnimation"
     )
+
+    // Get current density to convert between Dp and px
+    val density = LocalDensity.current
+
+    // Convert Dp values to pixels for canvas operations
+    val outerRadiusPx = with(density) { outerRadius.toPx() }
+    val chartSizePx = with(density) { chartSize.toPx() }
 
     // Calculate angle for each segment for better click detection
     val segmentAngles = remember(data, totalSum) {
@@ -81,26 +88,28 @@ fun InteractivePieChart(
     }
 
     // Background color for the center of the donut
-    var backgroundColor = MaterialTheme.colorScheme.background
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(
         modifier = modifier
-            .fillMaxWidth().wrapContentHeight(),
+            .fillMaxWidth()
+            .wrapContentHeight(),
         contentAlignment = Alignment.Center
     ) {
         Canvas(
-            modifier = Modifier.wrapContentSize()
-                .size(chartSize).background(Color.Red)
+            modifier = Modifier
+                .wrapContentSize()
+                .size(chartSize)
                 .pointerInput(data) {
                     detectTapGestures { offset ->
-                        val center = Offset((size.width / 2).toFloat(), (size.height / 2).toFloat())
+                        val center = Offset(size.width / 2f, size.height / 2f)
                         val distance = sqrt(
                             (offset.x - center.x).pow(2) + (offset.y - center.y).pow(2)
                         )
 
                         // Check if the click is within the donut (between inner and outer radius)
-                        val innerRadius = outerRadius * innerRadiusRatio
-                        if (distance in innerRadius..outerRadius) {
+                        val innerRadiusPx = outerRadiusPx * innerRadiusRatio
+                        if (distance in innerRadiusPx..outerRadiusPx) {
                             // Calculate angle of touch point (0-360 degrees, 0 at top, clockwise)
                             var touchAngle = (atan2(
                                 offset.y - center.y,
@@ -128,17 +137,15 @@ fun InteractivePieChart(
                 }
         ) {
             // Draw the pie chart
-            val width = size.width
-            val height = size.height
-            val center = Offset(width / 2, height / 2)
+            val center = Offset(size.width / 2f, size.height / 2f)
 
             var startAngle = -90f // Start from the top (translated to -90 in canvas coordinates)
 
             data.forEachIndexed { index, pieData ->
                 val sweepAngle = (pieData.value / totalSum) * 360f * animatedProgress.value
                 val scaleFactor = animatedScales[index].value
-                val segmentOuterRadius = outerRadius * scaleFactor
-                val segmentInnerRadius = (outerRadius * innerRadiusRatio)
+                val segmentOuterRadius = outerRadiusPx * scaleFactor
+                val segmentInnerRadius = outerRadiusPx * innerRadiusRatio
 
                 // Draw donut segment (we'll need to use a path for this)
                 val path = Path().apply {
@@ -189,7 +196,7 @@ fun InteractivePieChart(
             // Draw the inner circle (background) to complete the donut effect
             drawCircle(
                 color = backgroundColor,
-                radius = outerRadius * innerRadiusRatio * 0.98f,  // Slightly smaller to avoid edge artifacts
+                radius = outerRadiusPx * innerRadiusRatio * 0.98f,  // Slightly smaller to avoid edge artifacts
                 center = center
             )
         }
@@ -207,52 +214,68 @@ fun InteractivePieChart(
 
         // Show popup for selected segment
         if (showPopup && popupData != null) {
-            val density = LocalDensity.current.density
-            val popupX = popupPosition.x / density
-            val popupY = popupPosition.y / density
-
-            Card(
-                modifier = Modifier
-                    .offset(popupX.dp - 155.dp, popupY.dp - 150.dp)
-                    .width(100.dp),
-                shape = RoundedCornerShape(8.dp)) {
-                Column(
-                    modifier = Modifier.padding(5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = popupData!!.name,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = popupData!!.value.toString(),
-                        fontSize = 14.sp
-                    )
-                    Text(
-                        text = "${((popupData!!.value / totalSum) * 100).toFloat().round(1)}%",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
+            PopupCard(
+                popupData = popupData!!,
+                popupPosition = popupPosition,
+                totalSum = totalSum
+            )
         }
     }
 }
-// Helper function to determine if an angle is within a segment
-private fun isAngleInSegment(angle: Float, startAngle: Float, sweepAngle: Float): Boolean {
-    // Handle segments that cross the 0/360 boundary
-    return if (startAngle + sweepAngle > 360f) {
-        angle >= startAngle || angle <= (startAngle + sweepAngle - 360f)
-    } else {
-        angle >= startAngle && angle <= startAngle + sweepAngle
+
+@Composable
+private fun PopupCard(
+    popupData: PieChartData,
+    popupPosition: Offset,
+    totalSum: Float
+) {
+    val density = LocalDensity.current
+    val popupOffsetX = with(density) { (popupPosition.x / density.density).dp - 155.dp }
+    val popupOffsetY = with(density) { (popupPosition.y / density.density).dp - 150.dp }
+
+    Card(
+        modifier = Modifier
+            .offset(popupOffsetX, popupOffsetY)
+            .width(100.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = popupData.name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = popupData.value.toString(),
+                fontSize = 14.sp
+            )
+            Text(
+                text = "${((popupData.value / totalSum) * 100).toFloat().round(1)}%",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+        }
     }
 }
 
-// Extension function to round a float to a specified number of decimal places
-fun Float.round(decimals: Int): Float {
-    var multiplier = 1.0f
+// Helper function to check if an angle is within a segment
+private fun isAngleInSegment(angle: Float, startAngle: Float, sweepAngle: Float): Boolean {
+    val endAngle = (startAngle + sweepAngle) % 360
+    return if (startAngle <= endAngle) {
+        angle in startAngle..endAngle
+    } else {
+        // Handle the case where the segment crosses the 0/360 boundary
+        angle >= startAngle || angle <= endAngle
+    }
+}
+
+// Extension function to round a float to specified decimal places
+private fun Float.round(decimals: Int): Float {
+    var multiplier = 1f
     repeat(decimals) { multiplier *= 10 }
     return kotlin.math.round(this * multiplier) / multiplier
 }
@@ -285,8 +308,8 @@ fun PieChartExample() {
             InteractivePieChart(
                 data = pieChartData,
                 modifier = Modifier.fillMaxWidth(),
-                outerRadius = 500f,           // Increase the radius
-                chartSize = 450.dp           // Increase the canvas size
+                outerRadius = 170.dp,           // Increase the radius
+                chartSize = 420.dp           // Increase the canvas size
             )
 //Row(horizontalArrangement= Arrangement.SpaceBetween) {
 //    // Example of how to customize the pie chart size

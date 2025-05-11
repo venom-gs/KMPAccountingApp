@@ -165,6 +165,24 @@ fun SimpleDatePicker(
 }
 
 @Composable
+fun CommonNavigationButton(label: String, onButtonClick: () -> Unit, isEnabled: Boolean = true, modifier: Modifier = Modifier){
+    ElevatedButton(modifier = modifier.padding(3.dp),
+        elevation = ButtonDefaults.elevatedButtonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp,
+            disabledElevation = 0.dp,
+            hoveredElevation = 4.dp,
+            focusedElevation = 4.dp
+        ), colors =ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.background), shape = RoundedCornerShape(20.dp), onClick = {onButtonClick()},enabled=isEnabled
+    ){
+        Text(text=label, color = MaterialTheme.colorScheme.onPrimary,
+            fontFamily = FontFamily.SansSerif,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
 private fun DatePickerDialog(
     initialDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,

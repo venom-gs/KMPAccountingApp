@@ -1,5 +1,6 @@
 package org.example.kmpaccountingapp.LoggedInViewContainer.HomeScreenContainer
 
+import LineChartSample
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,63 +23,56 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.accountingappwithcompose.android.commonCompose.CommonNavigationButton
 import org.example.kmpaccountingapp.commonCompose.PieChartExample
 import org.example.kmpaccountingapp.commonCompose.ProgressBarChartWithPopups
 
 @Composable
 fun HomeScreenContainer(){
-LazyColumn (modifier = Modifier.fillMaxHeight()){
-    item {
-        TotalAmountContainerCommon("Total Receivable")
+    val navController = rememberNavController()
+LazyColumn {
+    item{
+        NavigationButtonContainer(navController)
     }
     item {
-        TotalAmountContainerCommon("Total Payables")
-    }
-    item {
-        PieChartExample()
-    }
-}
-}
+        NavHost(navController = navController, startDestination = "dashboard") {
+            composable(route = "dashboard") {
+                HomeDashBoard()
+            }
+            composable(route = "Sales") {
 
+            }
+            composable(route = "Purchase") {
+
+            }
+            composable(route = "Accounting") {
+
+            }
+        }
+        }
+}
+}
 @Composable
-fun TotalAmountContainerCommon(header : String){
-
-    Card(
-        modifier = Modifier.padding(16.dp).background(color = MaterialTheme.colorScheme.background),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background,
-        ),
-    ) {
-        Column() {
-            Box(modifier = Modifier.border(1.dp, color = Color.LightGray, shape = RoundedCornerShape(8.dp,8.dp,0.dp,0.dp)).fillMaxWidth(),) {
-                Text(text = header, fontSize = 25.sp, modifier = Modifier.padding(9.dp), fontWeight = FontWeight.Medium)
-            }
-            Box(modifier = Modifier.border(1.dp, color = Color.LightGray)) {
-                Column(Modifier.padding(9.dp)) {
-                    if (header == "Total Receivable")
-                        Text("Total Unpaid Invoices")
-                    else
-                        Text("Total Unpaid Bills")
-                    ProgressBarChartWithPopups()
-                }
-            }
-            Box() {
-                Row(Modifier.fillMaxWidth().border(1.dp, color = Color.LightGray, shape = RoundedCornerShape(0.dp,0.dp,8.dp,8.dp))) {
-                    Box(Modifier.weight(0.5f).padding(9.dp)) {
-                        Column {
-                            Text("Current")
-                            Text("621837")
-                        }
-                    }
-                    Box(Modifier.weight(0.5f).padding(9.dp)) {
-                        Column {
-                            Text("OverDue")
-                            Text("621837")
-                        }
-                    }
-                }
-            }
+fun NavigationButtonContainer(navController : NavController){
+    LazyRow (modifier = Modifier.fillMaxWidth()) {
+        item {
+            CommonNavigationButton("Receivable",{
+                navController.navigate("dashboard")
+            })
+        }
+        item {
+            CommonNavigationButton("Receivable", {
+                navController.navigate("Sales")})
+        }
+        item {
+            CommonNavigationButton("Sales",{})
+        }
+        item {
+            CommonNavigationButton("Sales", {})
         }
     }
 }

@@ -66,8 +66,7 @@ fun App() {
 //                    AllScreens({
 //                        navController.navigate("dashBoard")
 //                    })
-//                    CompanyRegistration()
-                    TextFieldsPreview()
+                    CompanyRegistration()
 //                    LoggedInViewContainer()
 //                    LineGraphExample()
                 }

@@ -77,7 +77,7 @@ fun CommonDivider(dividerText : String){
     Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.Center,
         modifier = Modifier.height(40.dp)
     ) {
-        Divider(modifier = Modifier.weight(1f))
+        HorizontalDivider(modifier = Modifier.weight(1f))
         Text(modifier = Modifier
             .height(50.dp)
             .padding(10.dp), text = dividerText)
@@ -85,44 +85,44 @@ fun CommonDivider(dividerText : String){
     }
 }
 
-@Composable
-fun CommonTextField(label: String, text: String = "",onTextChange: (String) -> Unit ,isEnabled :Boolean = true,fieldType :String = "randomBullShit"){
-
-    var text by remember { mutableStateOf(text) }
-    TextField(
-        value = text,
-        enabled = isEnabled,
-        onValueChange = {
-            when(fieldType){
-                "randomBullShit" -> text = it
-                "number" -> {
-                    if (it.matches("^[0-9]*$".toRegex())){
-                        text = it
-                    }
-                }
-                "alphabet" ->{
-                    if (it.matches("^[a-zA-Z]*$".toRegex())){
-                        text = it
-                    }
-                }
-                "textOnly" -> {
-                    if (!it.matches("^[0-9]*$".toRegex())){
-                        text = it
-                    }
-                }
-            }
-
-
-            onTextChange(text)},
-        label = { Text(label) },
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.LightGray,
-            unfocusedContainerColor = Color.LightGray,
-            disabledContainerColor = Color.LightGray,
-            focusedIndicatorColor = Color.LightGray,
-            unfocusedIndicatorColor = Color.LightGray,
-        ))
-}
+//@Composable
+//fun CommonTextField(label: String, text: String = "",onTextChange: (String) -> Unit ,isEnabled :Boolean = true,fieldType :String = "randomBullShit"){
+//
+//    var text by remember { mutableStateOf(text) }
+//    TextField(
+//        value = text,
+//        enabled = isEnabled,
+//        onValueChange = {
+//            when(fieldType){
+//                "randomBullShit" -> text = it
+//                "number" -> {
+//                    if (it.matches("^[0-9]*$".toRegex())){
+//                        text = it
+//                    }
+//                }
+//                "alphabet" ->{
+//                    if (it.matches("^[a-zA-Z]*$".toRegex())){
+//                        text = it
+//                    }
+//                }
+//                "textOnly" -> {
+//                    if (!it.matches("^[0-9]*$".toRegex())){
+//                        text = it
+//                    }
+//                }
+//            }
+//
+//
+//            onTextChange(text)},
+//        label = { Text(label) },
+//        colors = TextFieldDefaults.colors(
+//            focusedContainerColor = Color.LightGray,
+//            unfocusedContainerColor = Color.LightGray,
+//            disabledContainerColor = Color.LightGray,
+//            focusedIndicatorColor = Color.LightGray,
+//            unfocusedIndicatorColor = Color.LightGray,
+//        ))
+//}
 
 
 //var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -344,9 +344,8 @@ private fun String.capitalize(): String {
 
 
 @Composable
-fun StylishTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+fun CommonTextField(
+    text: String,
     label: String,
     placeholder: String = "",
     leadingIcon: @Composable (() -> Unit)? = null,
@@ -359,11 +358,32 @@ fun StylishTextField(
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     modifier: Modifier = Modifier
-) {
+    ,onTextChange: (String) -> Unit ,fieldType :String = "randomBullShit") {
+    var text by remember { mutableStateOf(text) }
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = text,
+            onValueChange = {
+                when(fieldType){
+                    "randomBullShit" -> {text = it}
+                    "number" -> {
+                        if (it.matches("^[0-9]*$".toRegex())){
+                            text = it
+                        }
+                    }
+                    "alphabet" ->{
+                        if (it.matches("^[a-zA-Z]*$".toRegex())){
+                            text = it
+                        }
+                    }
+                    "textOnly" -> {
+                        if (!it.matches("^[0-9]*$".toRegex())){
+                            text = it
+                        }
+                    }
+                }
+
+                onTextChange(text)},
             label = { Text(text = label) },
             placeholder = { Text(text = placeholder) },
             leadingIcon = leadingIcon,
@@ -377,13 +397,13 @@ fun StylishTextField(
             shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color(0xFFF8F8F8),
+                unfocusedContainerColor = Color.White,
                 disabledContainerColor = Color(0xFFF0F0F0),
-                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                unfocusedIndicatorColor = Color(0xFFE0E0E0),
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                focusedIndicatorColor = MaterialTheme.colorScheme.secondary,
+                unfocusedIndicatorColor = Color.White,
+                focusedLabelColor = MaterialTheme.colorScheme.secondary,
                 unfocusedLabelColor = Color.Gray,
-                cursorColor = MaterialTheme.colorScheme.primary
+                cursorColor = MaterialTheme.colorScheme.secondary
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -413,24 +433,22 @@ fun TextFieldsPreview() {
         ) {
             // Standard Text Field
             var text1 by remember { mutableStateOf("") }
-            StylishTextField(
-                value = text1,
-                onValueChange = { text1 = it },
+            CommonTextField(
+                text = text1,
                 label = "Username",
                 placeholder = "Enter your username",
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
-                )
+                ) ,onTextChange = {}
             )
 
             // Password Field
             var text2 by remember { mutableStateOf("") }
             var passwordVisible by remember { mutableStateOf(false) }
-            StylishTextField(
-                value = text2,
-                onValueChange = { text2 = it },
+            CommonTextField(
+                text = text2,
                 label = "Password",
                 placeholder = "Enter your password",
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
@@ -447,14 +465,13 @@ fun TextFieldsPreview() {
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
-                )
+                ) ,onTextChange = {}
             )
 
             // Error State Text Field
             var text3 by remember { mutableStateOf("invalid@email") }
-            StylishTextField(
-                value = text3,
-                onValueChange = { text3 = it },
+            CommonTextField(
+                text = text3,
                 label = "Email",
                 placeholder = "Enter your email",
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
@@ -463,14 +480,13 @@ fun TextFieldsPreview() {
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
-                )
+                ) ,onTextChange = {}
             )
 
             // Multi-line Text Field
             var text4 by remember { mutableStateOf("") }
-            StylishTextField(
-                value = text4,
-                onValueChange = { text4 = it },
+            CommonTextField(
+                text = text4,
                 label = "Bio",
                 placeholder = "Tell us about yourself",
                 singleLine = false,
@@ -478,7 +494,7 @@ fun TextFieldsPreview() {
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
-                )
+                ) ,onTextChange = {}
             )
         }
     }

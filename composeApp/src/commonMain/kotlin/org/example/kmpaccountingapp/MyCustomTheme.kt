@@ -64,7 +64,7 @@ fun MyCustomTheme(
 private val LightColorPalette = lightColorScheme(
     primary = Color(0xFFB9FD66),
     primaryContainer = Color(0xFF223D22),
-    secondary = Color(0xFFB9FD66),
+    secondary = Color(0xFF11512F),
     tertiary = Color(0xFF3700B3),
     background = androidx.compose.ui.graphics.Color(0xFFFCFFFF),
     surface = androidx.compose.ui.graphics.Color(0xFF97A5A6),
@@ -92,7 +92,7 @@ private val LightColorPalette = lightColorScheme(
 private val DarkColorPalette = darkColorScheme(
     primary = Color(0xFF11512F),
     primaryContainer = Color(0xFF33EB89),
-    secondary = Color(0xFF33EB89),
+    secondary = Color(0xFFB9FD66),
     tertiary = Color(0xFF3700B3),
     background = androidx.compose.ui.graphics.Color(0xFF121212),
     surface = androidx.compose.ui.graphics.Color(0x383838),

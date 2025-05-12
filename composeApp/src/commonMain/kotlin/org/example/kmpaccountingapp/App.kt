@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.accountingappwithcompose.android.commonCompose.TextFieldsPreview
 import com.example.accountingappwithcompose.android.screens.signIn.AllScreens
 import io.github.koalaplot.core.ChartLayout
 import io.github.koalaplot.core.bar.DefaultVerticalBar
@@ -35,6 +36,7 @@ import io.github.koalaplot.core.xygraph.autoScaleYRange
 import io.github.koalaplot.core.xygraph.rememberFloatLinearAxisModel
 import io.github.koalaplot.core.xygraph.rememberIntLinearAxisModel
 import org.example.kmpaccountingapp.LoggedInViewContainer.LoggedInViewContainer
+import org.example.kmpaccountingapp.signIn.CompanyRegistration
 
 
 data class BarData(
@@ -64,7 +66,9 @@ fun App() {
 //                    AllScreens({
 //                        navController.navigate("dashBoard")
 //                    })
-                    LoggedInViewContainer()
+//                    CompanyRegistration()
+                    TextFieldsPreview()
+//                    LoggedInViewContainer()
 //                    LineGraphExample()
                 }
                 composable(route = "dashBoard") {

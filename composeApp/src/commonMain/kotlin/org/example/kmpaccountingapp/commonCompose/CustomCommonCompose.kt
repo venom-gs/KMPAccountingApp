@@ -9,14 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -41,15 +39,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun CommonButton(label: String, onButtonClick: () -> Unit, isEnabled: Boolean, modifier: Modifier = Modifier){
@@ -77,7 +86,7 @@ fun CommonDivider(dividerText : String){
 }
 
 @Composable
-fun CommonTextField(label: String, text: String,onTextChange: (String) -> Unit ,isEnabled :Boolean,fieldType :String = "randomBullShit"){
+fun CommonTextField(label: String, text: String = "",onTextChange: (String) -> Unit ,isEnabled :Boolean = true,fieldType :String = "randomBullShit"){
 
     var text by remember { mutableStateOf(text) }
     TextField(
@@ -220,7 +229,7 @@ private fun DatePickerDialog(
                             LocalDate(currentDate.year, currentDate.month.next(), 1)
                         }
                     }) {
-                        Icon(Icons.Default.ArrowForward, "Next Month")
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, "Next Month")
                     }
                 }
 
@@ -330,4 +339,147 @@ private fun Month.prev(): Month {
 
 private fun String.capitalize(): String {
     return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}
+
+
+
+@Composable
+fun StylishTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String = "",
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    isError: Boolean = false,
+    errorMessage: String = "",
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(text = label) },
+            placeholder = { Text(text = placeholder) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color(0xFFF8F8F8),
+                disabledContainerColor = Color(0xFFF0F0F0),
+                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                unfocusedIndicatorColor = Color(0xFFE0E0E0),
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = Color.Gray,
+                cursorColor = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+        )
+
+        if (isError && errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+    }
+}
+
+@Preview()
+@Composable
+fun TextFieldsPreview() {
+    MaterialTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Standard Text Field
+            var text1 by remember { mutableStateOf("") }
+            StylishTextField(
+                value = text1,
+                onValueChange = { text1 = it },
+                label = "Username",
+                placeholder = "Enter your username",
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            // Password Field
+            var text2 by remember { mutableStateOf("") }
+            var passwordVisible by remember { mutableStateOf(false) }
+            StylishTextField(
+                value = text2,
+                onValueChange = { text2 = it },
+                label = "Password",
+                placeholder = "Enter your password",
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            if (passwordVisible) Icons.Filled.Lock else Icons.Filled.Email,
+
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                )
+            )
+
+            // Error State Text Field
+            var text3 by remember { mutableStateOf("invalid@email") }
+            StylishTextField(
+                value = text3,
+                onValueChange = { text3 = it },
+                label = "Email",
+                placeholder = "Enter your email",
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                isError = false,
+                errorMessage = "Please enter a valid email address",
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            // Multi-line Text Field
+            var text4 by remember { mutableStateOf("") }
+            StylishTextField(
+                value = text4,
+                onValueChange = { text4 = it },
+                label = "Bio",
+                placeholder = "Tell us about yourself",
+                singleLine = false,
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done
+                )
+            )
+        }
+    }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.accountingappwithcompose.android.commonCompose.SwitchesPreview
 import com.example.accountingappwithcompose.android.commonCompose.TextFieldsPreview
 import com.example.accountingappwithcompose.android.screens.signIn.AllScreens
 import io.github.koalaplot.core.ChartLayout
@@ -66,7 +67,7 @@ fun App() {
 //                    AllScreens({
 //                        navController.navigate("dashBoard")
 //                    })
-                    CompanyRegistration()
+                    SwitchesPreview()
 //                    LoggedInViewContainer()
 //                    LineGraphExample()
                 }

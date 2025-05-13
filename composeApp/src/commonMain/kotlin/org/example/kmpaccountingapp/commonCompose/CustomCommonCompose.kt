@@ -1,5 +1,6 @@
 package com.example.accountingappwithcompose.android.commonCompose
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +37,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -51,6 +54,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -495,6 +500,161 @@ fun TextFieldsPreview() {
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done
                 ) ,onTextChange = {}
+            )
+        }
+    }
+}
+
+@Composable
+fun StylishSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    thumbContent: @Composable (() -> Unit)? = null
+) {
+    // Use the Material 3 Switch component with custom colors
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        interactionSource = interactionSource,
+        thumbContent = thumbContent,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = MaterialTheme.colorScheme.primary,
+            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+            checkedBorderColor = MaterialTheme.colorScheme.primary,
+            checkedIconColor = MaterialTheme.colorScheme.onPrimary,
+            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+            uncheckedBorderColor = MaterialTheme.colorScheme.outline,
+            uncheckedIconColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledCheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            disabledCheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            disabledCheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            disabledCheckedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            disabledUncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            disabledUncheckedTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            disabledUncheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            disabledUncheckedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        )
+    )
+}
+
+/**
+ * A labeled switch component that includes text and a styled switch.
+ */
+@Composable
+fun LabeledSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = modifier
+            .clickable(
+                enabled = enabled,
+                onClick = { onCheckedChange(!checked) }
+            )
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            modifier = Modifier.weight(1f)
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        StylishSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
+}
+
+/**
+ * Preview various states of the switches
+ */
+@Composable
+fun SwitchesPreview() {
+    MaterialTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Basic switches using Material 3 Switch
+            Text(
+                text = "Material 3 Switches",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                var checked1 by remember { mutableStateOf(false) }
+                StylishSwitch(
+                    checked = checked1,
+                    onCheckedChange = { checked1 = it }
+                )
+
+                var checked2 by remember { mutableStateOf(true) }
+                StylishSwitch(
+                    checked = checked2,
+                    onCheckedChange = { checked2 = it }
+                )
+
+                StylishSwitch(
+                    checked = true,
+                    onCheckedChange = {},
+                    enabled = false
+                )
+
+                StylishSwitch(
+                    checked = false,
+                    onCheckedChange = {},
+                    enabled = false
+                )
+            }
+
+            Divider()
+
+            // Labeled switches
+            Text(
+                text = "Labeled Switches",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            var darkMode by remember { mutableStateOf(false) }
+            LabeledSwitch(
+                checked = darkMode,
+                onCheckedChange = { darkMode = it },
+                label = "Dark Mode"
+            )
+
+            var notifications by remember { mutableStateOf(true) }
+            LabeledSwitch(
+                checked = notifications,
+                onCheckedChange = { notifications = it },
+                label = "Enable Notifications"
+            )
+
+            var airplane by remember { mutableStateOf(false) }
+            LabeledSwitch(
+                checked = airplane,
+                onCheckedChange = { airplane = it },
+                label = "Airplane Mode",
+                enabled = false
             )
         }
     }

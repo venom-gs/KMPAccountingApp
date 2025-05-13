@@ -1,6 +1,7 @@
 package com.example.accountingappwithcompose.android.commonCompose
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +10,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -25,8 +40,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key.Companion.Calendar
 import androidx.compose.ui.text.font.FontFamily
@@ -42,6 +55,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -60,6 +74,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.*
 import kotlinx.datetime.TimeZone
@@ -654,6 +669,298 @@ fun SwitchesPreview() {
                 checked = airplane,
                 onCheckedChange = { airplane = it },
                 label = "Airplane Mode",
+                enabled = false
+            )
+        }
+    }
+}
+
+@Composable
+fun StylishDropdown(
+    label: String,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectionChanged: (Int) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var textFieldSize by remember { mutableStateOf(Size.Zero) }
+    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+
+    Column(modifier = modifier) {
+        Box {
+            // Create a custom field using Surface instead of OutlinedTextField
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (enabled) {
+                        if (expanded) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = enabled) { expanded = !expanded }
+                    .onGloballyPositioned { coordinates ->
+                        textFieldSize = coordinates.size.toSize()
+                    }
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (expanded) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (selectedIndex >= 0 && selectedIndex < items.size) items[selectedIndex] else "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (enabled) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        )
+                    }
+                }
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .width(with(LocalDensity.current) { textFieldSize.width.toDp() })
+            ) {
+                items.forEachIndexed { index, item ->
+                    DropdownMenuItem(
+                        text = { Text(text = item) },
+                        onClick = {
+                            onSelectionChanged(index)
+                            expanded = false
+                        },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StylishSearchableDropdown(
+    label: String,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectionChanged: (Int) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var searchText by remember { mutableStateOf("") }
+    var textFieldSize by remember { mutableStateOf(Size.Zero) }
+    val icon = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown
+
+    // Update search text when selection changes
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex >= 0 && selectedIndex < items.size) {
+            searchText = items[selectedIndex]
+        }
+    }
+
+    // Filter items based on search text
+    val filteredItems = remember(searchText, items) {
+        if (searchText.isEmpty()) {
+            items
+        } else {
+            items.filter { it.contains(searchText, ignoreCase = true) }
+        }
+    }
+
+    Column(modifier = modifier) {
+        Box {
+            // Custom searchable field using TextField
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (enabled) {
+                        if (expanded) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        textFieldSize = coordinates.size.toSize()
+                    }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (expanded) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        BasicTextField(
+                            value = searchText,
+                            onValueChange = {
+                                searchText = it
+                                expanded = true
+                            },
+                            enabled = enabled,
+                            modifier = Modifier.weight(1f),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                color = if (enabled) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            )
+                        )
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            modifier = Modifier.clickable(enabled = enabled) {
+                                expanded = !expanded
+                            }
+                        )
+                    }
+                }
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .width(with(LocalDensity.current) { textFieldSize.width.toDp() })
+            ) {
+                filteredItems.forEachIndexed { index, item ->
+                    val originalIndex = items.indexOf(item)
+                    DropdownMenuItem(
+                        text = { Text(text = item) },
+                        onClick = {
+                            onSelectionChanged(originalIndex)
+                            searchText = item
+                            expanded = false
+                        },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
+                if (filteredItems.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No matching items",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Preview of the dropdown components
+ */
+@Composable
+fun DropdownsPreview() {
+    val countries = listOf(
+        "United States", "Canada", "United Kingdom", "Australia",
+        "Germany", "France", "Italy", "Spain", "Japan", "China",
+        "Brazil", "India", "Russia", "South Africa", "Mexico"
+    )
+
+    MaterialTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text(
+                text = "Standard Dropdown",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            var selectedCountryIndex by remember { mutableStateOf(0) }
+            StylishDropdown(
+                label = "Select Country",
+                items = countries,
+                selectedIndex = selectedCountryIndex,
+                onSelectionChanged = { selectedCountryIndex = it }
+            )
+
+            Divider()
+
+            Text(
+                text = "Searchable Dropdown",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            var selectedSearchableCountryIndex by remember { mutableStateOf(0) }
+            StylishSearchableDropdown(
+                label = "Search Country",
+                items = countries,
+                selectedIndex = selectedSearchableCountryIndex,
+                onSelectionChanged = { selectedSearchableCountryIndex = it }
+            )
+
+            Divider()
+
+            Text(
+                text = "Disabled Dropdown",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            StylishDropdown(
+                label = "Disabled Dropdown",
+                items = countries,
+                selectedIndex = 0,
+                onSelectionChanged = { },
                 enabled = false
             )
         }
